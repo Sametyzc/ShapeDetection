@@ -2,7 +2,7 @@ from ShapeDetection import *
 import cv2 as cv
 import math
 
-image = cv.imread("./examples/images/ellipses.png")
+image = cv.imread("/home/berke/Desktop/ShapeDetection-main/examples/images/kare5.jpg")
 
 cv.imshow("image", image)
 
@@ -16,4 +16,21 @@ mask = cv.bitwise_or(mask1, mask2)
 #mask = cv.Canny(image,100,300)
 
 sd = ShapeDetection(mask,showWindows=True)
-ellipseList = sd.DetectCircle()
+squareList = sd.DetectSquares(10)
+
+for square in squareList:
+    cv.circle(image, square.CenterPoint.GetAsTuple(), 3,
+                                      (255,120,255), -1, cv.LINE_8)
+    print("---------")
+    print("Center Point :",square.CenterPoint)
+    print("Area :",square.Area)
+    print("Longest Side Lenght :",square.LongestSideLenght)
+    print("Shortest Side Lenght :",square.ShortestSideLenght)
+    print("Rotation Angle :",square.RotationAngle)
+    print("---------")
+
+print("Toplam: ", len(squareList))
+cv.imshow("result image",image)
+
+cv.waitKey(0)
+cv.destroyAllWindows()
