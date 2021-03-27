@@ -4,6 +4,7 @@ import math
 
 
 class ShapeDetection:
+
     def __init__(self, grayImage, showWindows=False):
         self.ImageIsGray(grayImage)
         self.showWindows = showWindows
@@ -40,8 +41,11 @@ class ShapeDetection:
             return True
 
         raise TypeError("grayImage must be gray scale!")
-
+    
     def SetContours(self):
+        """
+        Find contours in given image and show them if showWindows is true
+        """
         self.contours, _ = cv.findContours(
             self.grayImage, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
@@ -52,7 +56,14 @@ class ShapeDetection:
             cv.imshow("Contours", self.resultImage)
 
     def DetectCircles(self, validRadiusError=10):
+        """Find circles in the given image and show steps if showWindows is true
 
+        Args:
+            validRadiusError (int, optional): Valid error rate between the max and min radius. Can detect non-circular shapes if the error is too large. Defaults to 10.
+
+        Returns:
+            List: A list contains all the circles in the image.
+        """
         circleList = []
 
         for contour in self.contours:
@@ -108,64 +119,21 @@ class ShapeDetection:
                         ), (255, 0, 0), self.drawingThickness, cv.LINE_AA)
                         cv.line(self.resultImage, centerPoint.GetAsTuple(), furthestPoint.GetAsTuple(
                         ), (0, 0, 255), self.drawingThickness, cv.LINE_AA)
-                """    
-                if(np.abs(centerPoint.x-nearestPoint.x) < np.abs(centerPoint.x-furthestPoint.x)):
-                    b = minDistance
-                    bPoint = nearestPoint
-                    a = maxDistance
-                    aPoint = furthestPoint
-                else:
-                    b = maxDistance
-                    bPoint = furthestPoint
-                    a = minDistance
-                    aPoint = nearestPoint
-
-                avarageRadiuse = (b+a)/2
-
-                allPointsNumber = len(contour)
-
-                validPointsCount = 0
-                validPointsNumber = (
-                    allPointsNumber*validError)/100
-
-                NoneValidPointsCount = 0
-                NoneValidPointsCountLimit = allPointsNumber-validPointsNumber
-
-                for point in contour:
-                    otherPoint = Point(point[0][0], point[0][1])
-
-                    result = Formulas.CircleEquation(
-                        avarageRadiuse, centerPoint, otherPoint)
-
-                    error = Formulas.PercentageErrorEquation(
-                        Formulas.CircleEqtuationResult, result)
-
-                    if(error < 15):
-                        if self.showWindows:
-                            cv.circle(self.resultImage, (x, y), 1,
-                                      (255, 255, 0), -1, cv.LINE_8)
-
-                        validPointsCount += 1
-                    else:
-                        if self.showWindows:
-                            cv.circle(self.resultImage, (x, y),
-                                      1, (0, 0, 0), -1, cv.LINE_8)
-
-                        NoneValidPointsCount += 1
-
-                    if(validPointsNumber <= validPointsCount):
-                        newCircle = Circle(centerPoint, area, avarageRadiuse)
-                        circleList.append(newCircle)
-                        break
-                    if(NoneValidPointsCountLimit <= NoneValidPointsCount):
-                        break
-                    """
+               
         if self.showWindows:
             cv.imshow("Result", self.resultImage)
         return circleList
 
-    def DetectEllipses(self, validPoint=90,validEquationError=15):
+    def DetectEllipses(self, validPoint=90, validEquationError=15):
+        """Find ellipses in the given image and show steps if showWindows is true
 
+        Args:
+            validPoint (int, optional): Percentage of all pixels count of the contour to valid pixels count. Defaults to 90.
+            validEquationError (int, optional): Percentage error of the value that should be to pixels equation result. Defaults to 15.
+
+        Returns:
+            [type]: [description]
+        """
         ellipseList = []
 
         for contour in self.contours:
@@ -210,7 +178,7 @@ class ShapeDetection:
 
                 if(maxDistance == 0 or minDistance == 0):
                     continue
-                
+
                 if self.showWindows:
                     cv.line(self.resultImage, centerPoint.GetAsTuple(), nearestPoint.GetAsTuple(
                     ), (255, 0, 0), self.drawingThickness, cv.LINE_AA)
@@ -242,7 +210,8 @@ class ShapeDetection:
                 for point in contour:
                     otherPoint = Point(point[0][0], point[0][1])
 
-                    result = Formulas.RotatedEllipseEquation(a, b, centerPoint, otherPoint,angle)
+                    result = Formulas.RotatedEllipseEquation(
+                        a, b, centerPoint, otherPoint, angle)
 
                     error = Formulas.PercentageErrorEquation(
                         Formulas.EllipseEqtuationResult, result)
@@ -256,11 +225,12 @@ class ShapeDetection:
                     else:
                         if self.showWindows:
                             cv.circle(self.resultImage, otherPoint.GetAsTuple(), self.drawingThickness,
-                                      (0,0,0), -1, cv.LINE_8)
+                                      (0, 0, 0), -1, cv.LINE_8)
                         NoneValidPointsCount += 1
 
                     if(validPointsNumber <= validPointsCount):
-                        newEllipse = Ellipse(centerPoint, area, maxDistance,minDistance,angle)
+                        newEllipse = Ellipse(
+                            centerPoint, area, maxDistance, minDistance, angle)
                         ellipseList.append(newEllipse)
                         break
 
@@ -290,13 +260,15 @@ class Formulas:
         return valueX + valueY
 
     RotatedEllipseEqtuationResult = 1
-    # Rotated ellipse geometric place formula 
+    # Rotated ellipse geometric place formula
     @staticmethod
-    def RotatedEllipseEquation(a, b, centerPoint, otherPoint,rotateAngle):
+    def RotatedEllipseEquation(a, b, centerPoint, otherPoint, rotateAngle):
         radian = math.radians(rotateAngle)
-        value1 = np.power((otherPoint.x-centerPoint.x)*math.cos(radian) + (otherPoint.y-centerPoint.y)*math.sin(radian),2)
-        value2 = np.power((otherPoint.x-centerPoint.x)*math.sin(radian) - (otherPoint.y-centerPoint.y)*math.cos(radian),2)
-        return (value1/np.power(a,2)) + (value2/np.power(b,2))
+        value1 = np.power((otherPoint.x-centerPoint.x)*math.cos(radian) +
+                          (otherPoint.y-centerPoint.y)*math.sin(radian), 2)
+        value2 = np.power((otherPoint.x-centerPoint.x)*math.sin(radian) -
+                          (otherPoint.y-centerPoint.y)*math.cos(radian), 2)
+        return (value1/np.power(a, 2)) + (value2/np.power(b, 2))
 
     @staticmethod
     def DistanceEquation(Point1, Point2):
@@ -309,7 +281,7 @@ class Formulas:
 
     @staticmethod
     def AngleEquation(Point1, Point2):
-        if isinstance(Point1, Point):
+        if isinstance(Point1, Point) and isinstance(Point2, Point):
             if(Point1.y > Point2.y):
                 upperPoint = Point1
                 lowerPoint = Point2
@@ -340,7 +312,6 @@ class Formulas:
             raise ZeroDivisionError("ExactValue is zero!")
         value = np.abs(ExactValue - ApproximateValue)
         return (value/ExactValue)*100
-
 
 class Point:
     """
@@ -423,17 +394,37 @@ class Point:
         return Formulas.AngleEquation(self, other)
 
 class Circle:
-    def __init__(self, CenterPoint=None, Area=0, ShortRadius=0, LongRadius=0):
+    def __init__(self, CenterPoint=Point(0, 0), Area=0, ShortRadius=0, LongRadius=0):
         self.CenterPoint = CenterPoint
         self.Area = Area
         self.LongRadius = LongRadius
         self.ShortRadius = ShortRadius
-        self.AverageRadius = (self.ShortRadius+self.LongRadius)/2
+        self.Radius = (self.ShortRadius+self.LongRadius)/2
+
+    def __str__(self):
+        result = "-------------------------------------"
+        result += "\n            Circle               "
+        result += "\nCenterPoint = "+str(self.CenterPoint)
+        result += "\nArea = "+str(self.Area)
+        result += "\nRadius = "+str(self.Radius)
+        result += "\n-------------------------------------"
+        return result
 
 class Ellipse:
-    def __init__(self, CenterPoint=None, Area=0, LongRadius=0, ShortRadius=0, RotationAngle=0):
+    def __init__(self, CenterPoint=Point(0, 0), Area=0, LongRadius=0, ShortRadius=0, RotationAngle=0):
         self.CenterPoint = CenterPoint
         self.Area = Area
         self.RotationAngle = RotationAngle
         self.LongRadius = LongRadius
         self.ShortRadius = ShortRadius
+
+    def __str__(self):
+        result = "-------------------------------------"
+        result += "\n            Ellipse               "
+        result += "\nCenterPoint = "+str(self.CenterPoint)
+        result += "\nArea = "+str(self.Area)
+        result += "\nLongRadius = "+str(self.LongRadius)
+        result += "\nShortRadius = "+str(self.ShortRadius)
+        result += "\nRotationAngle = "+str(self.RotationAngle)
+        result += "\n-------------------------------------"
+        return result
