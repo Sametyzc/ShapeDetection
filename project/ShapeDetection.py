@@ -13,7 +13,8 @@ class ShapeDetection:
         if self.showWindows:
             self.resultImage = cv.cvtColor(grayImage, cv.COLOR_GRAY2BGR)
             self.drawingColor = (255, 0, 255)
-            self.drawingThickness = 1
+            self.drawingThicknessLine = 1
+            self.drawingThicknessCircle = 2
 
         self.SetContours()
 
@@ -52,7 +53,7 @@ class ShapeDetection:
         if self.showWindows:
             cv.imshow("Gray Image", self.grayImage)
             cv.drawContours(self.resultImage, self.contours, -
-                            1, self.drawingColor, thickness=self.drawingThickness)
+                            1, self.drawingColor, thickness=self.drawingThicknessLine)
             cv.imshow("Contours", self.resultImage)
 
     def DetectCircles(self, validRadiusError=10):
@@ -84,7 +85,7 @@ class ShapeDetection:
 
                 if self.showWindows:
                     cv.circle(self.resultImage, centerPoint.GetAsTuple(),
-                              self.drawingThickness, self.drawingColor, -1, cv.LINE_8)
+                              self.drawingThicknessCircle, self.drawingColor, -1, cv.LINE_8)
 
                 firstPoint = contour[0]
                 otherPoint = Point(firstPoint[0][0], firstPoint[0][1])
@@ -116,9 +117,9 @@ class ShapeDetection:
 
                     if self.showWindows:
                         cv.line(self.resultImage, centerPoint.GetAsTuple(), nearestPoint.GetAsTuple(
-                        ), (255, 0, 0), self.drawingThickness, cv.LINE_AA)
+                        ), (255, 0, 0), self.drawingThicknessLine, cv.LINE_AA)
                         cv.line(self.resultImage, centerPoint.GetAsTuple(), furthestPoint.GetAsTuple(
-                        ), (0, 0, 255), self.drawingThickness, cv.LINE_AA)
+                        ), (0, 0, 255), self.drawingThicknessLine, cv.LINE_AA)
                
         if self.showWindows:
             cv.imshow("Result", self.resultImage)
@@ -154,7 +155,7 @@ class ShapeDetection:
 
                 if self.showWindows:
                     cv.circle(self.resultImage, centerPoint.GetAsTuple(),
-                              self.drawingThickness, self.drawingColor, -1, cv.LINE_8)
+                              self.drawingThicknessCircle, self.drawingColor, -1, cv.LINE_8)
 
                 firstPoint = contour[0]
                 otherPoint = Point(firstPoint[0][0], firstPoint[0][1])
@@ -181,9 +182,9 @@ class ShapeDetection:
 
                 if self.showWindows:
                     cv.line(self.resultImage, centerPoint.GetAsTuple(), nearestPoint.GetAsTuple(
-                    ), (255, 0, 0), self.drawingThickness, cv.LINE_AA)
+                    ), (255, 0, 0), self.drawingThicknessLine, cv.LINE_AA)
                     cv.line(self.resultImage, centerPoint.GetAsTuple(), furthestPoint.GetAsTuple(
-                    ), (0, 0, 255), self.drawingThickness, cv.LINE_AA)
+                    ), (0, 0, 255), self.drawingThicknessLine, cv.LINE_AA)
 
                 if(np.abs(centerPoint.x-nearestPoint.x) < np.abs(centerPoint.x-furthestPoint.x)):
                     b = minDistance
@@ -218,13 +219,13 @@ class ShapeDetection:
 
                     if(error < validEquationError):
                         if self.showWindows:
-                            cv.circle(self.resultImage, otherPoint.GetAsTuple(), self.drawingThickness,
+                            cv.circle(self.resultImage, otherPoint.GetAsTuple(), self.drawingThicknessCircle,
                                       self.drawingColor, -1, cv.LINE_8)
 
                         validPointsCount += 1
                     else:
                         if self.showWindows:
-                            cv.circle(self.resultImage, otherPoint.GetAsTuple(), self.drawingThickness,
+                            cv.circle(self.resultImage, otherPoint.GetAsTuple(), self.drawingThicknessCircle,
                                       (0, 0, 0), -1, cv.LINE_8)
                         NoneValidPointsCount += 1
 
@@ -239,6 +240,66 @@ class ShapeDetection:
         if self.showWindows:
             cv.imshow("Result", self.resultImage)
         return ellipseList
+
+    def DetectSquares(self, validError = 10):
+
+        squareList = []
+
+        for contour in self.contours:
+            area = cv.contourArea(contour)
+            if(area > 50):
+                M = cv.moments(contour)
+
+                if(M["m00"] == 0):
+                    continue
+
+                m10 = int(M["m10"])
+                m01 = int(M["m01"])
+                m00 = int(M["m00"])
+
+                centerX = int(m10 / m00)
+                centerY = int(m01 / m00)
+                centerPoint = Point(centerX, centerY)
+
+                approx = cv.approxPolyDP(contour, 0.01* cv.arcLength(contour, True), True)
+
+                pointFirstCorner = Point(approx[0][0][0],approx[0][0][1])
+                pointSecondCorner = Point(approx[1][0][0],approx[1][0][1])
+                pointThirdCorner = Point(approx[2][0][0],approx[2][0][1])
+                pointFourthCorner = Point(approx[3][0][0],approx[3][0][1])
+                sideCenterPoint = pointFirstCorner.GetCenter(pointSecondCorner)
+
+                sideLenght1 = pointFirstCorner.GetDistance(pointSecondCorner)
+                sideLenght2 = pointSecondCorner.GetDistance(pointThirdCorner)
+                sideLenght3 = pointThirdCorner.GetDistance(pointFourthCorner)
+                sideLenght4 = pointFourthCorner.GetDistance(pointFirstCorner)
+                sideLenghts = [sideLenght1, sideLenght2, sideLenght3, sideLenght4]
+
+                shortestSideLenght = min(sideLenghts)
+                longestSideLenght = max(sideLenghts)
+
+                if (Formulas.PercentageErrorEquation(1, (sideLenghts[0]/sideLenghts[1])) <= validError 
+                    and Formulas.PercentageErrorEquation(1, (sideLenghts[1]/sideLenghts[2])) <= validError 
+                    and Formulas.PercentageErrorEquation(1, (sideLenghts[2]/sideLenghts[3])) <= validError 
+                    and Formulas.PercentageErrorEquation(1, (sideLenghts[3]/sideLenghts[1])) <= validError ):
+                
+                    rotationAngle = Formulas.AngleEquation(centerPoint, sideCenterPoint)
+                    
+                    if self.showWindows:
+                        cv.circle(self.resultImage, centerPoint.GetAsTuple(),
+                                self.drawingThicknessCircle, self.drawingColor, -1, cv.LINE_8)
+                        cv.circle(self.resultImage, sideCenterPoint.GetAsTuple(),
+                                self.drawingThicknessCircle, self.drawingColor, -1, cv.LINE_8)
+
+                    newSqaure = Square(centerPoint,area,shortestSideLenght,longestSideLenght,rotationAngle)
+                    squareList.append(newSqaure)
+
+                    if self.showWindows:
+                        cv.line(self.resultImage, centerPoint.GetAsTuple(), pointFirstCorner.GetAsTuple(), (255, 0, 0), self.drawingThicknessLine, cv.LINE_AA)
+                        cv.line(self.resultImage, centerPoint.GetAsTuple(), sideCenterPoint.GetAsTuple(), (0, 0, 255), self.drawingThicknessLine, cv.LINE_AA)
+        if self.showWindows:
+            cv.imshow("Result", self.resultImage)
+        return squareList
 
 # this module contains useful equations and objets to calculate the places of the shapes in analytical plane
 
@@ -312,6 +373,10 @@ class Formulas:
             raise ZeroDivisionError("ExactValue is zero!")
         value = np.abs(ExactValue - ApproximateValue)
         return (value/ExactValue)*100
+
+    @staticmethod
+    def CenterPointEquation(x, y):
+        return (x+y)/2
 
 class Point:
     """
@@ -393,6 +458,21 @@ class Point:
         """
         return Formulas.AngleEquation(self, other)
 
+    def GetCenter(self, other):
+        """Gets the center point between given points
+
+        Parameters
+        ----------
+        other : Point
+            The point which is in 2D plane
+        Returns
+        -------
+        Point
+            center point in given points
+        """
+        return Point(int(Formulas.CenterPointEquation(self.x, other.x)),
+                    int(Formulas.CenterPointEquation(self.y, other.y)))
+
 class Circle:
     def __init__(self, CenterPoint=Point(0, 0), Area=0, ShortRadius=0, LongRadius=0):
         self.CenterPoint = CenterPoint
@@ -425,6 +505,25 @@ class Ellipse:
         result += "\nArea = "+str(self.Area)
         result += "\nLongRadius = "+str(self.LongRadius)
         result += "\nShortRadius = "+str(self.ShortRadius)
+        result += "\nRotationAngle = "+str(self.RotationAngle)
+        result += "\n-------------------------------------"
+        return result
+
+class Square:
+    def __init__(self, CenterPoint=None, Area=0, ShortestSideLenght=0, LongestSideLenght=0, RotationAngle=0):
+        self.CenterPoint = CenterPoint
+        self.Area = Area
+        self.ShortestSideLenght = ShortestSideLenght
+        self.LongestSideLenght = LongestSideLenght
+        self.RotationAngle = RotationAngle
+
+    def __str__(self):
+        result = "-------------------------------------"
+        result += "\n            Square               "
+        result += "\nCenterPoint = "+str(self.CenterPoint)
+        result += "\nArea = "+str(self.Area)
+        result += "\nLongestSide = "+str(self.LongestSideLenght)
+        result += "\nShortestSide = "+str(self.ShortestSideLenght)
         result += "\nRotationAngle = "+str(self.RotationAngle)
         result += "\n-------------------------------------"
         return result
