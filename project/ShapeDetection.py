@@ -269,14 +269,14 @@ class ShapeDetection:
                 pointFourthCorner = Point(approx[3][0][0],approx[3][0][1])
                 sideCenterPoint = pointFirstCorner.GetCenter(pointSecondCorner)
 
-                sideLenght1 = Point.GetDistance(pointFirstCorner,pointSecondCorner)
-                sideLenght2 = Point.GetDistance(pointSecondCorner,pointThirdCorner)
-                sideLenght3 = Point.GetDistance(pointThirdCorner,pointFourthCorner)
-                sideLenght4 = Point.GetDistance(pointFourthCorner,pointFirstCorner)
+                sideLenght1 = pointFirstCorner.GetDistance(pointSecondCorner)
+                sideLenght2 = pointSecondCorner.GetDistance(pointThirdCorner)
+                sideLenght3 = pointThirdCorner.GetDistance(pointFourthCorner)
+                sideLenght4 = pointFourthCorner.GetDistance(pointFirstCorner)
                 sideLenghts = [sideLenght1, sideLenght2, sideLenght3, sideLenght4]
 
-                shortestSideLenght = Helper.FindMinElement(sideLenghts)
-                longestSideLenght = Helper.FindMaxElement(sideLenghts)
+                shortestSideLenght = min(sideLenghts)
+                longestSideLenght = max(sideLenghts)
 
                 if (Formulas.PercentageErrorEquation(1, (sideLenghts[0]/sideLenghts[1])) <= validError 
                     and Formulas.PercentageErrorEquation(1, (sideLenghts[1]/sideLenghts[2])) <= validError 
@@ -377,25 +377,6 @@ class Formulas:
     @staticmethod
     def CenterPointEquation(x, y):
         return (x+y)/2
-
-class Helper:
-    @staticmethod
-    def FindMaxElement(Array):
-        maxElement = Array[0]
-        for element in Array:
-            if maxElement < element:
-                maxElement = element
-
-        return maxElement
-
-    @staticmethod
-    def FindMinElement(Array):
-        minElement = Array[0]
-        for element in Array:
-            if minElement > element:
-                minElement = element
-
-        return minElement
 
 class Point:
     """
