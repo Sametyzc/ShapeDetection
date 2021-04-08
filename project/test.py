@@ -2,7 +2,7 @@ from ShapeDetection import *
 import cv2 as cv
 import math
 
-image = cv.imread("/home/berke/Desktop/ShapeDetection-main/examples/images/kare5.jpg")
+image = cv.imread("../examples/images/kare6.png")
 
 cv.imshow("image", image)
 
