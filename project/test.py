@@ -1,4 +1,4 @@
-from ShapeDetection import *
+from ShapeDetection import ShapeDetection
 import cv2 as cv
 import math
 
